@@ -1,0 +1,52 @@
+def label = "hello-${UUID.randomUUID().toString()}"
+podTemplate(label: label,
+	containers: [
+        containerTemplate(name: 'maven', image: 'public.ecr.aws/b3v0x0o0/maven-build-tool:1.0.6', ttyEnabled: true, command: 'cat'),
+        containerTemplate(name: 'podman', image: 'public.ecr.aws/b3v0x0o0/build-tool:aws4', ttyEnabled: true, command: 'cat', privileged:true)
+    ]) {
+    node(label) {
+        stage('Get Source') {
+            container('maven') {
+                sh"""
+                git clone https://icistrsa:${GIT_TOKEN}@github.com/icistrsa/cicd_repository.git
+                cd cicd_repository/sample/hello-world-spring/demo
+                mvn clean package 
+                """
+            }
+        }
+        
+        container('podman') {
+            stage('Build & push') {
+                sh """
+                    cd cicd_repository/sample/hello-world-spring/demo
+                    aws configure set aws_access_key_id ${AWS_ACCESS_ID}  
+                    aws configure set aws_secret_access_key ${AWS_ACCESS_KEY}
+                    aws configure set region ap-northeast-2 
+                    aws ecr-public get-login-password --region us-east-1 | docker login --username AWS --password-stdin public.ecr.aws/b3v0x0o0
+
+                    podman build -t public.ecr.aws/b3v0x0o0/cjs-edu:1.0.0 --cgroup-manager=cgroupfs --tls-verify=false . 
+                    podman push public.ecr.aws/b3v0x0o0/cjs-edu:1.0.0
+                """
+            }
+            /* if used private registry
+            podman login -u ${NEXUS_USERNAME} -p ${NEXUS_PASSWORD} ${NEXUS_HOST} --tls-verify=false
+            podman push ${NEXUS_HOST}/user02/spring-jenkins:1.0.0  --tls-verify=false
+            */
+            
+            stage('gitOps Update') {
+                sh"""
+                    cd cicd_repository/sample/gitops/hello-world-spring
+                    
+                    git config --global user.email "icistrsa"
+                    git config --global user.name "icistrsa"
+          
+                    kustomize edit set image public.ecr.aws/b3v0x0o0/cjs-edu:1.0.0
+                    
+                    git add .
+                    git commit -am 'update  from Jenkins'
+                    git push https://icistrsa:${GIT_TOKEN}@github.com/icistrsa/cicd_repository.git
+                """
+            }
+        } 
+    }
+}

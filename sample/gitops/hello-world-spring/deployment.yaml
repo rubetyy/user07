@@ -1,0 +1,21 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hello-spring
+  namespace: user01
+spec:
+  replicas: 1
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app: hello-spring
+  template:
+    metadata:
+      labels:
+        app: hello-spring
+    spec:
+      containers:
+      - image: public.ecr.aws/b3v0x0o0/edu-spring
+        name: hello-spring
+        ports:
+        - containerPort: 8080
