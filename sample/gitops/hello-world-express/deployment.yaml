@@ -2,7 +2,7 @@ apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: hello-express
-  namespace: user01
+  namespace: user07
 spec:
   replicas: 1
   revisionHistoryLimit: 3
