@@ -2,11 +2,11 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-world-flask-ingress
-  namespace: user01
+  namespace: user07
 spec:
   ingressClassName: nginx
   rules:
-  - host: user01-python.com
+  - host: user07-python.com
     http:
       paths:
       - backend:
