@@ -2,11 +2,11 @@ apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: hello-world-spring-ingress
-  namespace: user01
+  namespace: user07
 spec:
   ingressClassName: nginx
   rules:
-  - host: user01-spring.com
+  - host: user07-spring.com
     http:
       paths:
       - backend:
